@@ -12,7 +12,7 @@ import java.time.ZoneOffset
 
 class PeriodRecords : Externalizable {
 
-    lateinit var contents: List<PeriodRecord>
+    lateinit var contents: MutableList<PeriodRecord>
 
     override fun writeExternal(out: ObjectOutput) {
         out.writeInt(contents.size)
