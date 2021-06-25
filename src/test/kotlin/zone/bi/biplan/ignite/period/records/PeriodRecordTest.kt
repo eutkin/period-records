@@ -30,4 +30,21 @@ internal class PeriodRecordTest {
 
         assertEquals(record, record0)
     }
+
+    @Test
+    fun test0() {
+        val record = PeriodRecord.of(
+            UUID.randomUUID().toString(),
+            OffsetDateTime.now()
+        )
+
+        val body = ByteArrayOutputStream()
+        ObjectOutputStream(body).use { record.writeExternal(it) }
+
+        val record0 = PeriodRecord()
+
+        ObjectInputStream(ByteArrayInputStream(body.toByteArray())).use { record0.readExternal(it) }
+
+        assertEquals(record, record0)
+    }
 }
