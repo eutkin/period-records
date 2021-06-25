@@ -15,11 +15,11 @@ class PeriodRecord : Externalizable {
 
     lateinit var id: String
     lateinit var timestamp: OffsetDateTime
-    var values: Map<String, Any>? = null
+    lateinit var values: Map<String, Any>
 
     companion object {
 
-        fun of(id: String, timestamp: OffsetDateTime, value: Map<String, Any>? = null): PeriodRecord {
+        fun of(id: String, timestamp: OffsetDateTime, value: Map<String, Any> = emptyMap()): PeriodRecord {
             val r = PeriodRecord()
             r.id = id
             r.timestamp = timestamp.truncatedTo(SECONDS)
@@ -41,31 +41,28 @@ class PeriodRecord : Externalizable {
         offsetId.toByteArray().forEach { v -> out.writeByte(v.toInt()) }
         out.writeLong(this.timestamp.toEpochSecond())
 
-        out.writeInt(this.values?.size ?: 0)
-        if (this.values != null) {
-            val values0 = this.values!!
-            for ((field, value) in values0) {
-                out.writeInt(field.length)
-                field.toByteArray().forEach { v -> out.writeByte(v.toInt()) }
-                val type = value.javaClass.simpleName
-                out.writeInt(type.length)
-                out.writeBytes(type)
-                when (value) {
-                    is Int -> out.writeInt(value)
-                    is Long -> out.writeLong(value)
-                    is String -> {
-                        out.writeInt(value.length)
-                        out.write(value.toByteArray())
-                    }
-                    is BigDecimal -> {
-                        val scale: Int = value.scale()
-                        val precision: Int = value.precision()
-                        val bytes: ByteArray = value.unscaledValue().toByteArray()
-                        out.writeInt(scale)
-                        out.writeInt(precision)
-                        out.writeInt(bytes.size)
-                        out.write(bytes)
-                    }
+        out.writeInt(this.values.size)
+        for ((field, value) in values) {
+            out.writeInt(field.length)
+            field.toByteArray().forEach { v -> out.writeByte(v.toInt()) }
+            val type = value.javaClass.simpleName
+            out.writeInt(type.length)
+            out.writeBytes(type)
+            when (value) {
+                is Int -> out.writeInt(value)
+                is Long -> out.writeLong(value)
+                is String -> {
+                    out.writeInt(value.length)
+                    out.write(value.toByteArray())
+                }
+                is BigDecimal -> {
+                    val scale: Int = value.scale()
+                    val precision: Int = value.precision()
+                    val bytes: ByteArray = value.unscaledValue().toByteArray()
+                    out.writeInt(scale)
+                    out.writeInt(precision)
+                    out.writeInt(bytes.size)
+                    out.write(bytes)
                 }
             }
         }
@@ -85,40 +82,35 @@ class PeriodRecord : Externalizable {
             OffsetDateTime.ofInstant(Instant.ofEpochSecond(timestampAsSeconds), ZoneId.of(String(rawOffsetId)))
 
         val valuesSize = input.readInt()
-        val values = run {
-            if (valuesSize == 0) {
-                null
-            } else {
-                (0 until valuesSize).associate {
-                    val fieldSize = input.readInt()
-                    val rawField = ByteArray(fieldSize)
-                    (0 until fieldSize).forEach { j -> rawField[j] = input.readByte() }
-                    val valueTypeSize = input.readInt()
-                    val rawType = ByteArray(valueTypeSize)
-                    (0 until valueTypeSize).forEach { j -> rawType[j] = input.readByte() }
-                    val value = when (val type = String(rawType)) {
-                        "Int" -> input.readInt()
-                        "Long" -> input.readLong()
-                        "String" -> {
-                            val valueSize = input.readInt()
-                            val raw = ByteArray(valueSize)
-                            String(raw)
-                        }
-                        "BigDecimal" -> {
-                            val scale = input.readInt()
-                            val precision = input.readInt()
-                            val valueSize = input.readInt()
-                            val raw = ByteArray(valueSize)
-                            input.read(raw)
-                            val number = BigInteger(raw, 0, valueSize)
-                            BigDecimal(number, scale, MathContext(precision))
-                        }
-                        else -> throw IllegalStateException("Unknown type $type")
+        val values =
+            (0 until valuesSize).associate {
+                val fieldSize = input.readInt()
+                val rawField = ByteArray(fieldSize)
+                (0 until fieldSize).forEach { j -> rawField[j] = input.readByte() }
+                val valueTypeSize = input.readInt()
+                val rawType = ByteArray(valueTypeSize)
+                (0 until valueTypeSize).forEach { j -> rawType[j] = input.readByte() }
+                val value = when (val type = String(rawType)) {
+                    "Int" -> input.readInt()
+                    "Long" -> input.readLong()
+                    "String" -> {
+                        val valueSize = input.readInt()
+                        val raw = ByteArray(valueSize)
+                        String(raw)
                     }
-                    String(rawField) to value
+                    "BigDecimal" -> {
+                        val scale = input.readInt()
+                        val precision = input.readInt()
+                        val valueSize = input.readInt()
+                        val raw = ByteArray(valueSize)
+                        input.read(raw)
+                        val number = BigInteger(raw, 0, valueSize)
+                        BigDecimal(number, scale, MathContext(precision))
+                    }
+                    else -> throw IllegalStateException("Unknown type $type")
                 }
+                String(rawField) to value
             }
-        }
         this.id = id
         this.timestamp = timestamp
         this.values = values
@@ -128,7 +120,7 @@ class PeriodRecord : Externalizable {
 
     operator fun component2(): OffsetDateTime = this.timestamp
 
-    operator fun component3(): Map<String, Any>? = this.values
+    operator fun component3(): Map<String, Any> = this.values
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -146,7 +138,7 @@ class PeriodRecord : Externalizable {
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + timestamp.hashCode()
-        result = 31 * result + (values?.hashCode() ?: 0)
+        result = 31 * result + (values.hashCode())
         return result
     }
 
