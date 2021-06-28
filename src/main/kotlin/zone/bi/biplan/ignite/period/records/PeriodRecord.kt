@@ -52,8 +52,9 @@ class PeriodRecord : Externalizable {
                 is Int -> out.writeInt(value)
                 is Long -> out.writeLong(value)
                 is String -> {
-                    out.writeInt(value.length)
-                    value.toByteArray().forEach { out.writeByte(it.toInt()) }
+                    val bytes = value.toByteArray()
+                    out.writeInt(bytes.size)
+                    bytes.forEach { out.writeByte(it.toInt()) }
                 }
                 is BigDecimal -> {
                     val scale: Int = value.scale()
