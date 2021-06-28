@@ -45,9 +45,9 @@ class PeriodRecord : Externalizable {
         for ((field, value) in values) {
             out.writeInt(field.length)
             field.toByteArray().forEach { v -> out.writeByte(v.toInt()) }
-            val type = value.javaClass.simpleName
-            out.writeInt(type.length)
-            out.writeBytes(type)
+            val type = value.javaClass.simpleName.toByteArray()
+            out.writeInt(type.size)
+            type.forEach { v -> out.writeByte(v.toInt()) }
             when (value) {
                 is Int -> out.writeInt(value)
                 is Long -> out.writeLong(value)
