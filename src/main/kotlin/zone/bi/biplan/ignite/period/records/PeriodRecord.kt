@@ -29,7 +29,7 @@ class PeriodRecord : Externalizable {
     }
 
     override fun toString(): String {
-        return "HistoryRecord(id='$id', timestamp=$timestamp, value=$values)"
+        return "HistoryRecord"
     }
 
     override fun writeExternal(out: ObjectOutput) {
@@ -141,6 +141,5 @@ class PeriodRecord : Externalizable {
         result = 31 * result + (values.hashCode())
         return result
     }
-
 
 }

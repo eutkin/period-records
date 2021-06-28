@@ -6,7 +6,7 @@ import java.io.ObjectOutput
 
 class PeriodRecords : Externalizable {
 
-    lateinit var contents: MutableList<PeriodRecord>
+    var contents: MutableList<PeriodRecord> = mutableListOf()
 
     override fun writeExternal(out: ObjectOutput) {
         out.writeInt(contents.size)
