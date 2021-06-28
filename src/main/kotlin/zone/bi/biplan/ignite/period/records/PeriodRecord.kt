@@ -96,6 +96,7 @@ class PeriodRecord : Externalizable {
                     "String" -> {
                         val valueSize = input.readInt()
                         val raw = ByteArray(valueSize)
+                        (0 until valueSize).forEach { j -> raw[j] = input.readByte() }
                         String(raw)
                     }
                     "BigDecimal" -> {
@@ -103,7 +104,7 @@ class PeriodRecord : Externalizable {
                         val precision = input.readInt()
                         val valueSize = input.readInt()
                         val raw = ByteArray(valueSize)
-                        input.read(raw)
+                        (0 until valueSize).forEach { j -> raw[j] = input.readByte() }
                         val number = BigInteger(raw, 0, valueSize)
                         BigDecimal(number, scale, MathContext(precision))
                     }

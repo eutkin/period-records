@@ -10,18 +10,23 @@ import java.io.ObjectOutputStream
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 
 internal class PeriodRecordsTest {
 
     @Test
     fun test() {
-        val record = PeriodRecord.of(
-            UUID.randomUUID().toString(),
-            OffsetDateTime.now(),
-            mapOf("test" to BigDecimal.valueOf(1000))
-        )
+        val recordContents = mutableListOf<PeriodRecord>()
+        for (i in 0 until 999) {
+            val record = PeriodRecord.of(
+                UUID.randomUUID().toString(),
+                OffsetDateTime.now(),
+                mapOf("test" to BigDecimal.valueOf(ThreadLocalRandom.current().nextLong(1000, 100000)))
+            )
+            recordContents.add(record)
+        }
         val records = PeriodRecords()
-        records.contents = mutableListOf(record)
+        records.contents = recordContents
 
         val body = ByteArrayOutputStream()
         ObjectOutputStream(body).use { records.writeExternal(it) }
